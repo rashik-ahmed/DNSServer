@@ -19,7 +19,6 @@ from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 from dns.rdtypes.ANY.MX import MX
 from dns.rdtypes.ANY.SOA import SOA
 
-
 def generate_aes_key(password, salt):
     kdf = PBKDF2HMAC(
         algorithm=hashes.SHA256(),
@@ -35,21 +34,21 @@ def generate_aes_key(password, salt):
 def encrypt_with_aes(input_string, password, salt):
     key = generate_aes_key(password, salt)
     f = Fernet(key)
-    encrypted_data = f.encrypt(input_string.encode('utf-8'))
-    return encrypted_data    
+    encrypted_data = f.encrypt(input_string.encode('utf-8'))  # Encrypt data
+    return encrypted_data
 
 def decrypt_with_aes(encrypted_data, password, salt):
     key = generate_aes_key(password, salt)
     f = Fernet(key)
-    decrypted_data = f.decrypt(encrypted_data)
+    decrypted_data = f.decrypt(encrypted_data)  # Decrypt data
     return decrypted_data.decode('utf-8')
 
 salt = b'Tandon'  # Salt as a byte object
 password = "ra3197@nyu.edu"  # Your registered NYU email address
 input_string = "AlwaysWatching"  # Secret data for encryption
 
-encrypted_value = encrypt_with_aes(input_string, password, salt)  # Exfil function
-decrypted_value = decrypt_with_aes(encrypted_value, password, salt)  # Exfil function
+encrypted_value = encrypt_with_aes(input_string, password, salt)  # Encrypt function
+decrypted_value = decrypt_with_aes(encrypted_value, password, salt)  # Decrypt function
 
 # DNS records dictionary
 dns_records = {
@@ -61,30 +60,22 @@ dns_records = {
         dns.rdatatype.NS: 'ns.example.com.',
         dns.rdatatype.TXT: ('This is a TXT record',),
         dns.rdatatype.SOA: (
-            'ns1.example.com.',  # mname
-            'admin.example.com.',  # rname
-            2023081401,  # serial
-            3600,  # refresh
-            1800,  # retry
-            604800,  # expire
-            86400,  # minimum
+            'ns1.example.com.',
+            'admin.example.com.',
+            2023081401,
+            3600,
+            1800,
+            604800,
+            86400,
         ),
     },
-    'safebank.com.': {
-        dns.rdatatype.A: '192.168.1.102'
-    },
-    'google.com.': {
-        dns.rdatatype.A: '192.168.1.103'
-    },
-    'legitsite.com.': {
-        dns.rdatatype.A: '192.168.1.104'
-    },
-    'yahoo.com.': {
-        dns.rdatatype.A: '192.168.1.105'
-    },
+    'safebank.com.': {dns.rdatatype.A: '192.168.1.102'},
+    'google.com.': {dns.rdatatype.A: '192.168.1.103'},
+    'legitsite.com.': {dns.rdatatype.A: '192.168.1.104'},
+    'yahoo.com.': {dns.rdatatype.A: '192.168.1.105'},
     'nyu.edu.': {
         dns.rdatatype.A: '192.168.1.106',
-        dns.rdatatype.TXT: (str(encrypted_value),),  # Ensure encrypted_value is a string
+        dns.rdatatype.TXT: (encrypted_value,),
         dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
         dns.rdatatype.AAAA: '2001:0db8:85a3:0000:0000:8a2e:0373:7312',
         dns.rdatatype.NS: 'ns1.nyu.edu.'
