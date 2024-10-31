@@ -45,7 +45,7 @@ def decrypt_with_aes(encrypted_data, password, salt):
     return decrypted_data.decode('utf-8')
 
 salt = b'Tandon'  # Salt as a byte object
-password = "mc8100@nyu.edu"  # Your registered NYU email address
+password = "ra3197@nyu.edu"  # Your registered NYU email address
 input_string = "AlwaysWatching"  # Secret data for encryption
 
 encrypted_value = encrypt_with_aes(input_string, password, salt)  # Exfil function
