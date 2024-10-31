@@ -17,7 +17,6 @@ from cryptography.fernet import Fernet
 from cryptography.hazmat.primitives import hashes
 from cryptography.hazmat.primitives.kdf.pbkdf2 import PBKDF2HMAC
 import base64
-import ast
 
 def generate_aes_key(password, salt):
     kdf = PBKDF2HMAC(
@@ -34,22 +33,25 @@ def encrypt_with_aes(input_string, password, salt):
     key = generate_aes_key(password, salt)
     f = Fernet(key)
     encrypted_data = f.encrypt(input_string.encode('utf-8'))
-    return encrypted_data
+    return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')  # Convert to string for storage
 
 def decrypt_with_aes(encrypted_data, password, salt):
     key = generate_aes_key(password, salt)
     f = Fernet(key)
+    encrypted_data = base64.urlsafe_b64decode(encrypted_data)  # Decode from base64
     decrypted_data = f.decrypt(encrypted_data)
     return decrypted_data.decode('utf-8')
 
+# Parameters for encryption
 salt = b'Tandon'
-password = "mc8100@nyu.edu"  # replace with your email address registered in Gradescope
+password = "ra3197@nyu.edu"  # replace with your actual NYU email
 input_string = "AlwaysWatching"
 
+# Encrypt and decrypt the secret data
 encrypted_value = encrypt_with_aes(input_string, password, salt)
 decrypted_value = decrypt_with_aes(encrypted_value, password, salt)
 
-# DNS Records
+# DNS records including the encrypted data in a TXT record for nyu.edu
 dns_records = {
     'example.com.': {
         dns.rdatatype.A: '192.168.1.101',
@@ -74,7 +76,7 @@ dns_records = {
     'yahoo.com.': {dns.rdatatype.A: '192.168.1.105'},
     'nyu.edu.': {
         dns.rdatatype.A: '192.168.1.106',
-        dns.rdatatype.TXT: (str(encrypted_value),),
+        dns.rdatatype.TXT: (encrypted_value,),
         dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
         dns.rdatatype.AAAA: '2001:0db8:85a3:0000:0000:8a2e:0373:7312',
         dns.rdatatype.NS: 'ns1.nyu.edu.'
