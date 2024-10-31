@@ -36,15 +36,11 @@ def encrypt_with_aes(input_string, password, salt):
     return base64.urlsafe_b64encode(encrypted_data).decode('utf-8')  # Convert to string for storage
 
 def decrypt_with_aes(encrypted_data, password, salt):
-    try:
-        key = generate_aes_key(password, salt)
-        f = Fernet(key)
-        encrypted_data = base64.urlsafe_b64decode(encrypted_data)  # Decode from base64
-        decrypted_data = f.decrypt(encrypted_data)
-        return decrypted_data.decode('utf-8')
-    except Exception as e:
-        print("Decrypt error!", e)
-        raise
+    key = generate_aes_key(password, salt)
+    f = Fernet(key)
+    encrypted_data = base64.urlsafe_b64decode(encrypted_data)  # Decode from base64
+    decrypted_data = f.decrypt(encrypted_data)
+    return decrypted_data.decode('utf-8')
 
 # Parameters for encryption
 salt = b'Tandon'
@@ -53,9 +49,9 @@ input_string = "AlwaysWatching"
 
 # Encrypt and decrypt the secret data
 encrypted_value = encrypt_with_aes(input_string, password, salt)
-print("Encrypted Value (for TXT record):", encrypted_value)
+decrypted_value = decrypt_with_aes(encrypted_value, password, salt)
 
-# Store the encrypted data in the TXT record of nyu.edu
+# DNS records including the encrypted data in a TXT record for nyu.edu
 dns_records = {
     'example.com.': {
         dns.rdatatype.A: '192.168.1.101',
@@ -80,19 +76,12 @@ dns_records = {
     'yahoo.com.': {dns.rdatatype.A: '192.168.1.105'},
     'nyu.edu.': {
         dns.rdatatype.A: '192.168.1.106',
-        dns.rdatatype.TXT: (encrypted_value,),  # Store the encrypted data here
+        dns.rdatatype.TXT: (encrypted_value,),
         dns.rdatatype.MX: [(10, 'mxa-00256a01.gslb.pphosted.com.')],
         dns.rdatatype.AAAA: '2001:0db8:85a3:0000:0000:8a2e:0373:7312',
         dns.rdatatype.NS: 'ns1.nyu.edu.'
     }
 }
-
-# Testing the decryption to verify
-try:
-    decrypted_value = decrypt_with_aes(dns_records['nyu.edu'][dns.rdatatype.TXT][0], password, salt)
-    print("Decrypted Value:", decrypted_value)
-except Exception as e:
-    print("Decryption failed:", e)
 
 def run_dns_server():
     server_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
